@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Övning Kognitiva Processer</title>
+    <script src="jspsych-6.2.0/jspsych.js"></script>
+    <script src="jspsych-6.2.0/plugins/jspsych-html-keyboard-response.js"></script>
+    <script src="jspsych-6.2.0/plugins/jspsych-html-button-response.js"></script>
+    <script src="jspsych-6.2.0/plugins/jspsych-image-keyboard-response.js"></script>
+    <link href="jspsych-6.2.0/css/jspsych.css" rel="stylesheet" type="text/css">
+    <meta charset="utf-8"/>
+  </head>
+  <body>  </body>
+    <script>
+        /* create timeline */
+        var timeline = [];
+
+        /* welcome message */
+        var welcome = {
+            type: "html-button-response",
+            stimulus: "<p>Välkommen till dagens övning. Vänta tills försöksledaren ber dig fortsätta. </p>",
+            choices: ["Fortsätt"]
+        };
+        timeline.push(welcome);
+
+        /* IOWA TASK BEGIN
+            Give instructions */
+        var iowa_instructions = {
+            type: "html-keyboard-response",
+            choices: [32],
+            stimulus: "<p><h1> Instruktioner </h1></p>" +
+            "<p> Du kommer nu får spela ett \"casino\" spel. Du kommer välja mellan fyra olika högar med spelkort (D, F, J, K), genom att trycka motsvarande tangent på tangentbordet. </p>" +
+            "<p> Vid varje har du möjlighet att vinna lite pengar. Ibland kommer du också behöva betala en avgift till banken. Efter varje omgång hämtar du in dina pengar och din totalsumma justeras. </p>" + 
+            "<p> Du börjar spelet med ett lån på <strong>2000kr</strong> </p>" + 
+            "<p> Spelet består av många omgångar och tar cirka 5-10 minuter att spela. </p>" + 
+            "<p> Spela tills spelet tar slut, och försök samla ihop så mycket du kan utöver ditt lån på 2000kr. </p>",
+            prompt : "<p> Tryck på mellanslag för att börja </p>",
+            data: {
+                cumulative_points:2000
+            },
+            post_trial_gap: 0//1500
+                    };
+        timeline.push(iowa_instructions);
+                    
+        /* iowa trial */
+        /* define stuff needed */
+        var trial_no = 0;
+        var this_reward = 0;
+        var this_penalty = 0;
+        var current_sum = 0;
+        function generate_array(input_arr, times = 10){
+            let output = [];
+            for (i=0; i < times; i++){
+                output = output.concat(jsPsych.randomization.shuffle(input_arr));
+            }
+            return(output)
+        }
+        var bad_low_penalty = generate_array(input_arr = [0, 0, 0, 0, 0, -150, -200, -250, -300, -350]);
+        var bad_high_penalty = generate_array(input_arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, -1250]);
+        var good_low_penalty = generate_array(input_arr = [0, 0, 0, 0, 0, -50, -50, -50, -50, -50]);
+        var good_high_penalty = generate_array(input_arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, -250]);
+        
+        // display related below
+        var card_image = "<img src = 'cardback.jpg', width=" + screen.width/7 + "px></img>";
+        var coin_image = "<img src = 'gold-coin.jpg', width=" + screen.width/9 + "px></img>"
+        var coin_dict = {
+            "50": "<img src = 'gold-coin50.png', width=" + screen.width/9 + "px></img>",
+            "100": "<img src = 'gold-coin100.png', width=" + screen.width/9 + "px></img>",
+            "-50": "<img src = 'gold-coin-50.png', width=" + screen.width/9 + "px></img>",
+            "-250": "<img src = 'gold-coin-250.png', width=" + screen.width/9 + "px></img>",
+            "-150": "<img src = 'gold-coin-150.png', width=" + screen.width/9 + "px></img>",
+            "-200": "<img src = 'gold-coin-200.png', width=" + screen.width/9 + "px></img>",
+            "-300": "<img src = 'gold-coin-300.png', width=" + screen.width/9 + "px></img>",
+            "-350": "<img src = 'gold-coin-350.png', width=" + screen.width/9 + "px></img>",
+        }
+        var show_cards = "<div style='position:fixed; bottom:50px; right:"+ ((screen.width/6)*1) +"px;'>" + card_image + "</div>" +
+            "<div style='position:fixed; bottom:50px; right:"+ ((screen.width/6)*2) +"px;'>" + card_image + "</div>" + 
+            "<div style='position:fixed; bottom:50px; right:"+ ((screen.width/6)*3) +"px;'>" + card_image + "</div>" +
+            "<div style='position:fixed; bottom:50px; right:"+ ((screen.width/6)*4) +"px;'>" + card_image + "</div>"  ; 
+        var card_text = "<div style='position:fixed; bottom:0px; right:"+ ((screen.width/6)*1 + screen.width/14) +"px;'> <p style='font-size:150%'>K</p> </div>" +
+            "<div style='position:fixed; bottom:0px; right:"+ ((screen.width/6)*2 + screen.width/14) +"px;'> <p style='font-size:150%'>J</p> </div>" +
+            "<div style='position:fixed; bottom:0px; right:"+ ((screen.width/6)*3 + screen.width/14) +"px;'> <p style='font-size:150%'>F</p> </div>" + 
+            "<div style='position:fixed; bottom:0px; right:"+ ((screen.width/6)*4 + screen.width/14) +"px;'> <p style='font-size:150%'>D</p> </div>";
+        var instruction_text = "<div style='position:fixed; bottom:500px; left:400px; right:400px;'><p> Dra ett kort från en av högarna, genom att trycka D, F, J eller K på ditt tangentbord. </p> </div>";
+        var iowa_discussion = "<h1> Diskussionsfrågor </h1>" +
+            "<p>Reflektera kring din strategi när du valde mellan kortlekarna och jämför hur övriga gruppmedlemmar gjorde.</p>" +
+            "<p> Valde ni samma strategi? </p>" +
+            "<p> Var det några av kortlekarna som var särskilt bra eller dåliga? Hade ni alla samma upplevelse?</p>" + 
+            "<p> Vad gjorde kortlekarna särskilt bra eller dåliga? </p>"
+
+        /* display */
+        var iowa_display = {
+            type: "html-keyboard-response",
+            choices: ['d','f','j','k'],
+            stimulus: function(){
+                current_sum = jsPsych.data.getLastTrialData().values()[0].cumulative_points
+                var dina_pengar = "<div style='position:absolute; top:100px; left: 300px; right:300px'><p style='color:red; font-size:160%'> Dina pengar: " + current_sum + "kr </p></div>";
+                return(dina_pengar + show_cards + card_text + instruction_text)
+            },
+            data:{
+                category: "iowa_choice",
+                cumulative_points: function(){
+                    var tmp = jsPsych.data.getLastTrialData().values()[0].cumulative_points;
+                    return(tmp)}
+            },
+            on_finish: function(data){
+                if(data.key_press == jsPsych.pluginAPI.convertKeyCharacterToKeyCode('d')){
+                    data.deck_chosen = "bad_low";
+                    this_reward = 100;
+                    this_penalty = bad_low_penalty[trial_no];
+                } else {
+                    if(data.key_press == jsPsych.pluginAPI.convertKeyCharacterToKeyCode('f')){
+                        data.deck_chosen = "bad_high";
+                        this_reward = 100;
+                        this_penalty = bad_high_penalty[trial_no];
+                    } else {
+                        if(data.key_press == jsPsych.pluginAPI.convertKeyCharacterToKeyCode('j')){
+                            data.deck_chosen = "good_low";
+                            this_reward  = 50;
+                            this_penalty = good_low_penalty[trial_no];
+                        } else {
+                            data.deck_chosen = "good_high"
+                            this_reward  = 50;
+                            this_penalty = good_high_penalty[trial_no];
+                        }
+                    }
+                    
+                };
+                data.trial_no = (trial_no = trial_no+1);
+                data.reward = this_reward;
+                data.penalty = this_penalty;
+                data.cumulative_points =  data.cumulative_points + this_reward + this_penalty;
+            }
+        };
+
+        /* show outcome */
+        var iowa_outcome = {
+            type: "html-keyboard-response",
+            stimulus: function(){
+                var last_rew = jsPsych.data.getLastTrialData().values()[0].reward;
+                var pos_coin = "<div style='position:fixed; bottom:600px; right:"+ ((screen.width/5)*3) +"px'>" + coin_dict[last_rew] + "</div>";
+                var last_pun = jsPsych.data.getLastTrialData().values()[0].penalty;
+                var pen_coin = ""
+                if(last_pun != 0){
+                    pen_coin = "<div style='position:fixed; bottom:600px; left:"+ ((screen.width/5)*3) +"px'>" + coin_dict[last_pun] + "</div>";
+                } 
+                var describe_outcome = "<p>Tryck mellanslag för att acceptera utfallet.</p>";
+                return(show_cards + pos_coin + pen_coin + describe_outcome)
+            },
+            choices: [32],
+            data:{
+                category: "iowa_choice",
+                cumulative_points: function(){
+                    var tmp = jsPsych.data.getLastTrialData().values()[0].cumulative_points;
+                    return(tmp)}
+            }
+        };
+
+        /* push iowa main */
+        var iowa_procedure ={
+            timeline: [iowa_display, iowa_outcome],
+            repetitions: 2
+        };
+        timeline.push(iowa_procedure);
+
+        /* iowa summary and Qs */
+        var iowa_final = {
+            type: "html-button-response",
+            stimulus: function(){
+                current_sum = jsPsych.data.getLastTrialData().values()[0].cumulative_points
+                var dina_pengar = "<div style='position:absolute; top:100px; left: 300px; right:300px'><p style='color:red; font-size:160%'> Dina pengar: " + current_sum + "kr </p></div>";
+                return(dina_pengar + iowa_discussion)
+            },
+            choices: ["Fortsätt"],
+            prompt: "Tryck när ni diskuterat klart och vill börja nästa del."
+        };
+        timeline.push(iowa_final);
+
+        /* 
+        ~~~
+        start experiment
+        ~~~
+         */
+        jsPsych.init({
+            timeline: timeline,
+            on_finish: function() {
+                jsPsych.data.displayData()}
+            });
+    </script>
+
+
+</html>
