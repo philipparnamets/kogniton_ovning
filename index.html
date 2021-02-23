@@ -6,6 +6,8 @@
     <script src="jspsych-6.2.0/plugins/jspsych-html-keyboard-response.js"></script>
     <script src="jspsych-6.2.0/plugins/jspsych-html-button-response.js"></script>
     <script src="jspsych-6.2.0/plugins/jspsych-image-keyboard-response.js"></script>
+    <script src="jspsych-6.2.0/plugins/jspsych-survey-html-form.js"></script>
+    <script src="jspsych-6.2.0/plugins/jspsych-survey-multi-choice.js"></script>
     <link href="jspsych-6.2.0/css/jspsych.css" rel="stylesheet" type="text/css">
     <meta charset="utf-8"/>
   </head>
@@ -13,22 +15,137 @@
     <script>
         /* create timeline */
         var timeline = [];
+        var asian_group = [];
 
         /* welcome message */
         var welcome = {
-            type: "html-button-response",
-            stimulus: "<p>Välkommen till dagens övning. Vänta tills försöksledaren ber dig fortsätta. </p>",
-            choices: ["Fortsätt"]
+            type: "survey-multi-choice",
+            preamble: "<p>Välkommen till dagens övning. </p> <p> Vänta tills försöksledaren ber dig fortsätta. </p>",
+            questions: [
+                {prompt: "Välj ditt gruppnummer:", name: "group", options: ["A", "B"], required: true}
+            ],
+            button_label: ["Fortsätt"],
+            on_finish: function(data){
+                asian_group = JSON.parse(data.responses).group;
+                console.log(asian_group);
+            }
         };
         timeline.push(welcome);
+
+        /* JUDGMENT TASK BEGIN 
+            get stuff */
+        var wason_drink_response = [];
+        var wason_response = [];
+        var linda_response = [];
+
+        /*give instructions */
+        var judge_instructions = {
+            type: "html-keyboard-response",
+            choices: [32],
+            stimulus: "<p><h1> Instruktioner Station A</h1></p>" +
+            "<p> Du kommer nu få lösa ett antal uppgifter som är vanliga i studiet av individuella omdömen och beslutsfattande.</p> " + 
+            " <p> Försök besvara varje fråga och arbeta utan att fråga dina gruppmedlemmar om hjälp - ni kommer diskutera era svar tillsammans seanre. </p>",
+            prompt : "<p> Tryck på mellanslag för att börja </p>",
+            post_trial_gap: 0
+                    };
+        timeline.push(judge_instructions);
+
+        /* Wason task */
+        var wason_task = {
+            type: "survey-html-form",
+            preamble: "<h2> Wason-uppgiften </h2><p> Nedan ser du fyra kort. Varje kort har en bokstav på ena sidan och en siffra på den andra sidan. Vilka av korten skulle du behöva vända på för att bedöma om följande regel stämmer om samtliga korten?</p>" +
+                "<p>'Om ett kort har en vokal på ena sidan, då har det en jämn siffra på andra sidan.'</p>" ,
+            html: '<p> Mitt svar: <input type="text" id="test-resp-box" name="wason" size="10" /></p>'  +
+                 "<div style='position:fixed, bottom:100px'><img src='wason.png'></img></div> ",
+            autofocus: 'test-resp-box',
+            on_finish: function(data){
+                  wason_response = JSON.parse(data.responses).wason ;
+           }
+        };
+        timeline.push(wason_task);
+
+        /* Drinking task */
+        var wason_drink_task = {
+            type: "survey-html-form",
+            preamble: "<h2> Dryckersålder-uppgiften </h2>"+
+                "<p> Föreställ dig att du är en polis i tjänst. Det är ditt jobb att se till att människor följer vissa regeler. Korten framför dig representerar fyra personer som sitter vid ett bord. På ena sidan av ett kort ser du personens ålder och på den andra vad den personen dricker.  </p>" +
+                "<p> Här är en regel: 'Om en person dricker öl, så måste den vara minst 19 år gammal.' </p>" +
+                "<p> Välj det kort, eller de kort, som du definitivt måste vända på för att avgöra om regeln följs i det här sällskapet. " ,
+            html: '<p> Mitt svar: <input type="text" id="test-resp-box" name="wason_drink" size="10" /></p>'  +
+                 "<div style='position:fixed, bottom:100px'><img src='wason-drink.png'></img></div> ",
+            autofocus: 'test-resp-box',
+            on_finish: function(data){
+                  wason_drink_response = JSON.parse(data.responses).wason_drink ;
+           }
+        };
+        timeline.push(wason_drink_task);
+        
+        /* Asian disease problem */
+        var asian_disease = {
+            type: "survey-html-form",
+            preamble: function(){
+                if (asian_group=="A"){
+                   var strategi = "<p> Strategi A: 200 personer kommer att räddas. </p>" + 
+                "<p> Strategi B: Med 1/3 sannolikhet kommer 600 personer att räddas, och med 2/3 sannolikhet kommer ingen att räddas.</p>"
+                } else {
+                    var strategi = "<p> Strategi C: 400 personer kommer att dö. </p>" + 
+                "<p> Strategi D: Med 1/3 sannolikhet kommer ingen att att dö, och med 2/3 sannolikhet kommer alla att dö.</p>"
+                }           
+                return("<h2> Influensaproblemet </h2>" +
+                    "<p> Föreställ dig att USA förbereder sig för ett utbrott av en ny och ovanlig influensa, som förväntas döda 600 människor. Två alternativa strategies för att bekämpa influensan har utformats. Anta att den exakta vetenskapliga beräkningen av konsekvenserna av de två strategierna är som följer: </p>" +
+                    strategi)
+                },
+            html: "<p> Vilken av de två strategierna skuule du föredra? <input type='text' id = 'test-resp-box' name = 'asian_disease' size = '10' /> </p> ",
+            autofocus: 'test-resp-box',
+            on_finish: function(data){
+                asian_disease_response = JSON.parse(data.responses).asian_disease ;
+            }
+        };
+        timeline.push(asian_disease)
+
+        /* Linda problem */
+        var linda_task = {
+            type: "survey-multi-choice",
+            preamble:  "<h2> Lindaproblemet </h2> "+
+                "<p> Linda är 31 år gammal, singel, säger vad hon tycker och mycket smart. Hon har en examen i filosofi. När hon var student var hon väldigt engagerad i rättvise och diskrimineringsfrågor och deltog även i antikärnkraftsdemonstrationer. </p>" +
+                "<p> Vilket av följande påståenden är mest sannolikt? </p>" +
+                "<p> Linda jobbar på bank.  </p>" + 
+                "<p> Linda jobbar på bank och är aktiv i kvinnorörelsen. </p> ",
+            questions: [
+                {prompt: "Mitt svar:", name: "linda", options: ["A. Linda jobbar på bank.", "B. Linda jobbar på bank och är aktiv i kvinnorörelsen."], required: true}
+            ],
+            button_label: ["Fortsätt"],
+            on_finish: function(data){
+                  linda_response = JSON.parse(data.responses).linda ;
+            }
+        };
+        timeline.push(linda_task);
+
+        /* judge summary and Qs */
+        var judge_final = {
+            type: "html-button-response",
+            stimulus: function(){
+                var judge_discussion = "<h1> Diskussionsfrågor </h1>" +
+                    "<p> Jämför dina svar på Wason och dryckesålderuppgifterna! Liknar uppgifterna varandra? Liknar dina svara varandra? Diskutera tillsammans varför eller varför inte. </p>" +
+                    "<p> Jämför era svar i gruppen på Linda frågan. Hur resonerade ni för att besvara frågan? </p>" ;
+                var dina_svar = "<div style='position:absolute; top:100px; left: 300px; right:300px'><p style='font-size:120%'> Dina svar: </p><p style='color:red; font-size:120%'> Wason: " + wason_response + "</p>" +
+                    "<p style='color:red; font-size:120%'> Dryckesålder: " + wason_drink_response + "</p>" +
+                    "<p style='color:red; font-size:120%'> Linda: " + linda_response + "</p></div>";
+                return(dina_svar + judge_discussion)
+            },
+            choices: ["Fortsätt"],
+            prompt: "Tryck \"Fortsätt\" när ni diskuterat klart och vill påbörja nästa del."
+        };
+        timeline.push(judge_final);
+
 
         /* IOWA TASK BEGIN
             Give instructions */
         var iowa_instructions = {
             type: "html-keyboard-response",
             choices: [32],
-            stimulus: "<p><h1> Instruktioner </h1></p>" +
-            "<p> Du kommer nu får spela ett \"casino\" spel. Du kommer välja mellan fyra olika högar med spelkort (D, F, J, K), genom att trycka motsvarande tangent på tangentbordet. </p>" +
+            stimulus: "<p><h1> Instruktioner Station B </h1></p>" +
+            "<p> Du kommer nu får spela ett \"casino\"spel. Du kommer välja mellan fyra olika högar med spelkort (D, F, J, K), genom att trycka motsvarande tangent på tangentbordet. </p>" +
             "<p> Vid varje har du möjlighet att vinna lite pengar. Ibland kommer du också behöva betala en avgift till banken. Efter varje omgång hämtar du in dina pengar och din totalsumma justeras. </p>" + 
             "<p> Du börjar spelet med ett lån på <strong>2000kr</strong> </p>" + 
             "<p> Spelet består av många omgångar och tar cirka 5-10 minuter att spela. </p>" + 
@@ -37,7 +154,7 @@
             data: {
                 cumulative_points:2000
             },
-            post_trial_gap: 0//1500
+            post_trial_gap: 0
                     };
         timeline.push(iowa_instructions);
                     
@@ -171,7 +288,7 @@
                 return(dina_pengar + iowa_discussion)
             },
             choices: ["Fortsätt"],
-            prompt: "Tryck när ni diskuterat klart och vill börja nästa del."
+            prompt: "Tryck \"Fortsätt\" när ni diskuterat klart och vill påbörja nästa del."
         };
         timeline.push(iowa_final);
 
