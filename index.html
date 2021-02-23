@@ -8,7 +8,9 @@
     <script src="jspsych-6.2.0/plugins/jspsych-image-keyboard-response.js"></script>
     <script src="jspsych-6.2.0/plugins/jspsych-survey-html-form.js"></script>
     <script src="jspsych-6.2.0/plugins/jspsych-survey-multi-choice.js"></script>
+    <script src="jspsych-6.2.0/plugins/jspsych-survey-text.js"></script>
     <link href="jspsych-6.2.0/css/jspsych.css" rel="stylesheet" type="text/css">
+    <link href="extrastyle.css" rel="stylesheet" type="text/css">
     <meta charset="utf-8"/>
   </head>
   <body>  </body>
@@ -20,17 +22,17 @@
         /* welcome message */
         var welcome = {
             type: "survey-multi-choice",
-            preamble: "<p>Välkommen till dagens övning. </p> <p> Vänta tills försöksledaren ber dig fortsätta. </p>",
+            preamble: "<h2>Välkommen till dagens övning. </h2> <p> Vänta tills försöksledaren ber dig fortsätta. </p>",
             questions: [
                 {prompt: "Välj ditt gruppnummer:", name: "group", options: ["A", "B"], required: true}
             ],
             button_label: ["Fortsätt"],
             on_finish: function(data){
                 asian_group = JSON.parse(data.responses).group;
-                console.log(asian_group);
             }
         };
         timeline.push(welcome);
+
 
         /* JUDGMENT TASK BEGIN 
             get stuff */
@@ -58,6 +60,7 @@
             html: '<p> Mitt svar: <input type="text" id="test-resp-box" name="wason" size="10" /></p>'  +
                  "<div style='position:fixed, bottom:100px'><img src='wason.png'></img></div> ",
             autofocus: 'test-resp-box',
+            button_label: ["Fortsätt"],
             on_finish: function(data){
                   wason_response = JSON.parse(data.responses).wason ;
            }
@@ -74,6 +77,7 @@
             html: '<p> Mitt svar: <input type="text" id="test-resp-box" name="wason_drink" size="10" /></p>'  +
                  "<div style='position:fixed, bottom:100px'><img src='wason-drink.png'></img></div> ",
             autofocus: 'test-resp-box',
+            button_label: ["Fortsätt"],
             on_finish: function(data){
                   wason_drink_response = JSON.parse(data.responses).wason_drink ;
            }
@@ -95,8 +99,9 @@
                     "<p> Föreställ dig att USA förbereder sig för ett utbrott av en ny och ovanlig influensa, som förväntas döda 600 människor. Två alternativa strategies för att bekämpa influensan har utformats. Anta att den exakta vetenskapliga beräkningen av konsekvenserna av de två strategierna är som följer: </p>" +
                     strategi)
                 },
-            html: "<p> Vilken av de två strategierna skuule du föredra? <input type='text' id = 'test-resp-box' name = 'asian_disease' size = '10' /> </p> ",
+            html: "<p> Vilken av de två strategierna föredrar du? <input type='text' id = 'test-resp-box' name = 'asian_disease' size = '10' /> </p> ",
             autofocus: 'test-resp-box',
+            button_label: ["Fortsätt"],
             on_finish: function(data){
                 asian_disease_response = JSON.parse(data.responses).asian_disease ;
             }
@@ -112,7 +117,7 @@
                 "<p> Linda jobbar på bank.  </p>" + 
                 "<p> Linda jobbar på bank och är aktiv i kvinnorörelsen. </p> ",
             questions: [
-                {prompt: "Mitt svar:", name: "linda", options: ["A. Linda jobbar på bank.", "B. Linda jobbar på bank och är aktiv i kvinnorörelsen."], required: true}
+                {prompt: "Mitt svar:", name: "linda", options: ["A. Linda jobbar på bank.", "B. Linda jobbar på bank och är aktiv i kvinnorörelsen."]}
             ],
             button_label: ["Fortsätt"],
             on_finish: function(data){
@@ -127,10 +132,10 @@
             stimulus: function(){
                 var judge_discussion = "<h1> Diskussionsfrågor </h1>" +
                     "<p> Jämför dina svar på Wason och dryckesålderuppgifterna! Liknar uppgifterna varandra? Liknar dina svara varandra? Diskutera tillsammans varför eller varför inte. </p>" +
-                    "<p> Jämför era svar i gruppen på Linda frågan. Hur resonerade ni för att besvara frågan? </p>" ;
-                var dina_svar = "<div style='position:absolute; top:100px; left: 300px; right:300px'><p style='font-size:120%'> Dina svar: </p><p style='color:red; font-size:120%'> Wason: " + wason_response + "</p>" +
-                    "<p style='color:red; font-size:120%'> Dryckesålder: " + wason_drink_response + "</p>" +
-                    "<p style='color:red; font-size:120%'> Linda: " + linda_response + "</p></div>";
+                    "<p> Jämför era svar  på Linda frågan med varandra i gruppen. Hur resonerade ni för att besvara frågan? </p>" ;
+                var dina_svar = "<div style='position:absolute; top:100px; left: 300px; right:300px'><p style='font-size:100%'> Dina svar: </p><p style='color:red; font-size:80%'> Wason: " + wason_response + "</p>" +
+                    "<p style='color:red; font-size:80%'> Dryckesålder: " + wason_drink_response + "</p>" +
+                    "<p style='color:red; font-size:80%'> Linda: " + linda_response + "</p></div>";
                 return(dina_svar + judge_discussion)
             },
             choices: ["Fortsätt"],
@@ -291,6 +296,118 @@
             prompt: "Tryck \"Fortsätt\" när ni diskuterat klart och vill påbörja nästa del."
         };
         timeline.push(iowa_final);
+
+        /* PROBLEM SOLVING 
+            get stuff */
+            var duncker_response = [];
+        var duncker_candle_response = [];
+        var monk_response = [];
+        var orc_response = [];
+
+         /*give instructions */
+         var problem_instructions = {
+            type: "html-keyboard-response",
+            choices: [32],
+            stimulus: "<p><h1> Instruktioner Station D</h1></p>" +
+            "<p> Du kommer nu få lösa ett antal uppgifter som är vanliga i studiet av problemlösande.</p> " + 
+            " <p> Försök besvara varje fråga och arbeta utan att fråga dina gruppmedlemmar om hjälp - ni kommer diskutera era svar tillsammans seanre. </p>",
+            prompt : "<p> Tryck på mellanslag för att börja </p>",
+            post_trial_gap: 0
+                    };
+        timeline.push(problem_instructions);
+
+        var duncker = {
+            type: "survey-text",
+            preamble: "<h2> Dunckers strålningsproblem </h2>" +
+                "<p> Anta att du är en läkare vars patient har en elakartad tumör i magen. Det är omöjligt att operera patienten. Om tumören inte avlägsnas kommer patienten att dö" +
+                "Det finns en typ av strålar som kan användas för att förstöra tumören. Om strålarna riktas mot tumören med tillräcklig intensitet förstörs tumören." + 
+                " Vid höga intensiteter så förstör strålarna inte bara tumörer utan även hälsosam vävnad. Vid låga intensiteter är strålarna harmlösa för all vävnad. </p>"+
+                "<img src = 'duncker.png'></img>",
+            questions: [
+                {prompt:  "<p> Hur kan du utforma proceduren så att tumören förstörs av strålarna men samtidigt ingen av den hälsosamma vävnaden skadas?</p>",
+                placeholder: "Skriv här...", rows:10, columns: 50,
+                name: "duncker"}
+            ],
+            button_label: ["Fortsätt"],         
+            on_finish: function(data){
+                duncker_response = JSON.parse(data.responses).duncker;
+            }
+        };
+        timeline.push(duncker)
+
+        var duncker_candle = {
+            type: "survey-text",
+            preamble: "<h2> Dunckers vaxljusproblem </h2>" +
+                "<p> Anta att visas ett bord med en kartonglåda fylld med häftstift, ett vaxljus och en uppsättning tändstickor." +
+                "Din uppgift är att hitta ett sätt att använda föremålen för att fästa ett ljus på väggen för att lysa upp rummet. </p>"+
+                "<img src = 'candle.png'></img>",
+            questions: [
+                {prompt:  "<p>Hur kan du åstadkomma detta? (Du kan anta att rummets väggar är gjorda av kork) </p>",
+                placeholder: "Skriv här...", rows:10, columns: 50,
+                name: "candle"}
+            ],
+            button_label: ["Fortsätt"],         
+            on_finish: function(data){
+                duncker_candle_response = JSON.parse(data.responses).candle;
+            }
+        };
+        timeline.push(duncker_candle)
+
+        var monk = {
+            type: "survey-text",
+            preamble: "<h2> Munkproblemet </h2>" +
+                "<p>En morgon stiger en Buddhistmunk upp i gryning för att klättra upp för berget till templet på toppen." +
+                "Han når templet strax före solnedgången. Ett par dagar senare lämnar munken templet i gryningen för att bege sig ner för berget. Eftersom det är nedförsbacke rör han sig lite snabbare än vad han gjorde uppåt. </p>",
+            questions: [
+                {prompt:  "<p> Visa att det finns en plats längs rutten där munken kommer befinna sig på exakt samma tidpunkt under båda resorna. </p>",
+                placeholder: "Skriv här...", rows:10, columns: 50,
+                name: "monk"}
+            ],
+            button_label: ["Fortsätt"],         
+            on_finish: function(data){
+                monk_response = JSON.parse(data.responses).monk;
+            }
+        };
+        timeline.push(monk)
+
+        var orc = {
+            type: "survey-text",
+            preamble: "<h2> Hobbitar och orcher </h2>" +
+                "<p> Tre hobbitar och tre orcher står vid en stor flodbank, och de vill alla korsa över till andra sidan. " +
+                "Tursamt nog finns det en båt, men otursamt nog kan bra två varelser färdas på den åt gången. Situtationen kompliceras ytterligare av att orcher är ganska fasansfulla varelser." +
+                "Närhelst det finns fler orcher än hobbitar på en flodbank så kommer de omedelbart anfalla hobbitarna och äta upp dem. " +
+                "Du kan därför aldrig lämna fler orcher än hobbitar på endera flodbanken. Även om orcherna är fasansfulla går det lita på att de ror över båten.</p>",
+            questions: [
+                {prompt:  "<p>Din utmaning är att förflytta alla sex varelser över floden utan att orcherna äter upp hobbitarna. </p>",
+                placeholder: "Skriv här...", rows:10, columns: 50,
+                name: "orc"}
+            ],
+            button_label: ["Fortsätt"],         
+            on_finish: function(data){
+                orc_response = JSON.parse(data.responses).orc;
+            }
+        };
+        timeline.push(orc)
+
+        /* problem solving summary and Qs */
+        var problem_final = {
+            type: "html-button-response",
+            stimulus: function(){
+                var problem_discussion = "<h1> Diskussionsfrågor </h1>" +
+                    "<p> Jämför era svar på de olika problemen. Hur resonerade de som löste problemen? Hur resonerade de som inte löste dem? </p>" +
+                    "<p> Kan ni förklara hur ni landade i olika lösningar? </p>" ;
+                var dina_svar = "<div style='position:absolute; top:100px; left: 300px; right:300px'><p style='font-size:100%'> Dina svar: </p>  "+
+                    " <p style='color:red; font-size:80%'>Strålningsproblemet: " + duncker_response + "</p>" +
+                    "<p style='color:red; font-size:80%'> Vaxljusproblemet: " + duncker_candle_response + "</p>" +
+                    "<p style='color:red; font-size:80%'> Munkproblemet:" + monk_response + "</p></div>" +
+                    "<p style='color:red; font-size:80%'> Hobbitproblemet:" + orc_response + "</p></div>";
+                return(dina_svar + problem_discussion)
+            },
+            choices: ["Fortsätt"],
+            prompt: "Tryck \"Fortsätt\" när ni diskuterat klart och vill påbörja nästa del."
+        };
+        timeline.push(problem_final);
+
 
         /* 
         ~~~
