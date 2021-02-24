@@ -33,7 +33,6 @@
         };
         timeline.push(welcome);
 
-
         /* JUDGMENT TASK BEGIN 
             get stuff */
         var wason_drink_response = [];
@@ -83,24 +82,25 @@
            }
         };
         timeline.push(wason_drink_task);
-        
+
         /* Asian disease problem */
         var asian_disease = {
-            type: "survey-html-form",
-            preamble: function(){
+            type: "survey-multi-choice",
+            preamble: "<h2> Influensaproblemet </h2>" +
+                "<p> Föreställ dig att USA förbereder sig för ett utbrott av en ny och ovanlig influensa, som förväntas döda 600 människor. Två alternativa strategies för att bekämpa influensan har utformats. Anta att den exakta vetenskapliga beräkningen av konsekvenserna av de två strategierna är som följer: </p>",
+            questions: function(){
                 if (asian_group=="A"){
-                   var strategi = "<p> Strategi A: 200 personer kommer att räddas. </p>" + 
-                "<p> Strategi B: Med 1/3 sannolikhet kommer 600 personer att räddas, och med 2/3 sannolikhet kommer ingen att räddas.</p>"
+                    return([
+                        {prompt:"Vilken av de två strategierna föredrar du?", name: "asian_disease",
+                        options: ["Strategi A. 200 personer kommer att räddas.", "Strategi B. Med 1/3 sannolikhet kommer 600 personer att räddas, och med 2/3 sannolikhet kommer ingen att räddas."] }
+                    ])
                 } else {
-                    var strategi = "<p> Strategi C: 400 personer kommer att dö. </p>" + 
-                "<p> Strategi D: Med 1/3 sannolikhet kommer ingen att att dö, och med 2/3 sannolikhet kommer alla att dö.</p>"
-                }           
-                return("<h2> Influensaproblemet </h2>" +
-                    "<p> Föreställ dig att USA förbereder sig för ett utbrott av en ny och ovanlig influensa, som förväntas döda 600 människor. Två alternativa strategies för att bekämpa influensan har utformats. Anta att den exakta vetenskapliga beräkningen av konsekvenserna av de två strategierna är som följer: </p>" +
-                    strategi)
-                },
-            html: "<p> Vilken av de två strategierna föredrar du? <input type='text' id = 'test-resp-box' name = 'asian_disease' size = '10' /> </p> ",
-            autofocus: 'test-resp-box',
+                    return([
+                        {prompt:"Vilken av de två strategierna föredrar du?", name: "asian_disease",
+                        options: ["Strategi C. 400 personer kommer att dö.", "Strategi D. Med 1/3 sannolikhet kommer ingen att att dö, och med 2/3 sannolikhet kommer alla att dö."] }
+                    ])
+                }
+            },
             button_label: ["Fortsätt"],
             on_finish: function(data){
                 asian_disease_response = JSON.parse(data.responses).asian_disease ;
@@ -135,6 +135,7 @@
                     "<p> Jämför era svar  på Linda frågan med varandra i gruppen. Hur resonerade ni för att besvara frågan? </p>" ;
                 var dina_svar = "<div style='position:absolute; top:100px; left: 300px; right:300px'><p style='font-size:100%'> Dina svar: </p><p style='color:red; font-size:80%'> Wason: " + wason_response + "</p>" +
                     "<p style='color:red; font-size:80%'> Dryckesålder: " + wason_drink_response + "</p>" +
+                    "<p style='color:red; font-size:80%'> Influensaproblemet: " + asian_disease_response + "</p>" +
                     "<p style='color:red; font-size:80%'> Linda: " + linda_response + "</p></div>";
                 return(dina_svar + judge_discussion)
             },
@@ -193,6 +194,7 @@
             "-200": "<img src = 'gold-coin-200.png', width=" + screen.width/9 + "px></img>",
             "-300": "<img src = 'gold-coin-300.png', width=" + screen.width/9 + "px></img>",
             "-350": "<img src = 'gold-coin-350.png', width=" + screen.width/9 + "px></img>",
+            "-1250": "<img src = 'gold-coin-1250.png', width=" + screen.width/9 + "px></img>",
         }
         var show_cards = "<div style='position:fixed; bottom:50px; right:"+ ((screen.width/6)*1) +"px;'>" + card_image + "</div>" +
             "<div style='position:fixed; bottom:50px; right:"+ ((screen.width/6)*2) +"px;'>" + card_image + "</div>" + 
@@ -270,7 +272,7 @@
             },
             choices: [32],
             data:{
-                category: "iowa_choice",
+                category: "iowa_results",
                 cumulative_points: function(){
                     var tmp = jsPsych.data.getLastTrialData().values()[0].cumulative_points;
                     return(tmp)}
@@ -280,7 +282,7 @@
         /* push iowa main */
         var iowa_procedure ={
             timeline: [iowa_display, iowa_outcome],
-            repetitions: 2
+            repetitions: 10
         };
         timeline.push(iowa_procedure);
 
@@ -296,6 +298,231 @@
             prompt: "Tryck \"Fortsätt\" när ni diskuterat klart och vill påbörja nästa del."
         };
         timeline.push(iowa_final);
+
+        
+        /* SOCIAL DECISION MAKING BEGIN */
+
+        /* give instructions */
+        var social_instructions = {
+            type: "html-keyboard-response",
+            choices: [32],
+            stimulus: "<p><h1> Instruktioner Station C </h1></p>" +
+            "<p> Du kommer nu få spela en serie spel mot virtuella personer. Reglerna för varje spel introduceras efterhand. </p>",
+            prompt : "<p> Tryck på mellanslag för att börja </p>",
+            post_trial_gap: 0
+                    };
+        timeline.push(social_instructions);
+        
+        /* prisoners dilemma */ 
+        /* stuff */ 
+        var pd_points = 0;
+        var pd_partner_points = 0;
+        var trial_no = 1;
+        var my_last_move = "C";
+        var partner_move = [];
+        var this_round_points = [];
+        var this_round_partner_points = [];
+
+
+        var pd_instructions = {
+            type: "html-keyboard-response",
+            choices: [32],
+            stimulus: "<h2> Upprepat fångarnas dilemma </h2>" +
+            "<p> Du kommer spela 10 rundor av samma spel. Du spelar mot en annan spelare. Under varje spelrunda kommer du (och din medspelare) välja mellan handling <strong> C </strong> eller handling <strong> D. </strong>  </p>" +
+            "<p> Beroende på vad du och din medspelare väljer får ni olika mängder poäng. Utbetalningarna till dig och medspelaren framgår av tabellen nedan. Första siffran om presenteras är poängen du får och andra siffran poängen din medspelare får. </p>" + 
+            "<p> Försök samla ihop så mmånga poäng som möjligt. </p>" + 
+            "<img src = 'pd_payoff.png'></img> ",
+            prompt : "<p> Tryck på mellanslag för att börja </p>",
+            data: {
+                pd_points: 0,
+                pd_partner_points: 0,
+                my_last_move: "c",
+                trial_no : 1
+            },
+                    };
+        timeline.push(pd_instructions);
+
+        /* PD-game */ 
+        var pd_instructions = "<p> Välj <strong> C </strong> eller <strong> D </strong></p> " +
+            "<p style = 'size = 75%'> Tryck bokstaven på tangentbordet som motsvarar ditt val. </p>";
+
+        /* choice trial */
+        var pd_choice = {
+            type: "html-keyboard-response",
+            choices: ['c', 'd'],
+            stimulus: function(){
+                current_sum = jsPsych.data.getLastTrialData().values()[0].pd_points
+                var dina_poäng = "<div style='position:absolute; top:100px; left: 300px; right:300px'><p style='color:red; font-size:160%'> Dina poäng: " + current_sum + "</p></div>";
+                return(pd_instructions + dina_poäng)
+            },
+            data:{
+                category: "pd_choice",
+                pd_points: function(){
+                    var tmp = jsPsych.data.getLastTrialData().values()[0].pd_points;
+                    return(tmp)},
+                pd_partner_points: function(){
+                    var tmp = jsPsych.data.getLastTrialData().values()[0].pd_partner_points;
+                    return(tmp)},
+                my_last_move: function(){
+                    var tmp = jsPsych.data.getLastTrialData().values()[0].my_last_move;
+                    return(tmp)},
+                trial_no: function(){
+                    var tmp = jsPsych.data.getLastTrialData().values()[0].trial_no;
+                    return(tmp)}
+            },
+            on_finish: function(data) {
+                // partner move
+               if (trial_no==10){
+                   partner_move = "D";
+                } else {
+                    if (jsPsych.pluginAPI.compareKeys(data.my_last_move, "C" )) {
+                        partner_move = "C";
+                    } else {
+                        partner_move = "D";
+                    }
+                };
+                // my move
+                my_last_move = jsPsych.pluginAPI.convertKeyCodeToKeyCharacter(data.key_press);
+                
+                // points
+                if (jsPsych.pluginAPI.compareKeys(partner_move, my_last_move) ) {
+                    if (jsPsych.pluginAPI.compareKeys(partner_move, "C")) {
+                        this_round_points = 3;
+                        this_round_partner_points = 3;
+                    } else {
+                        this_round_points = 1;
+                        this_round_partner_points = 1;
+                    }
+                } else {
+                    if ( jsPsych.pluginAPI.compareKeys(partner_move, "C")) {
+                        this_round_points = 5;
+                        this_round_partner_points = 0;
+                    } else {
+                        this_round_points = 0;
+                        this_round_partner_points = 5;
+                    }
+                }
+                pd_points = pd_points + this_round_points;
+                pd_partner_points = pd_partner_points + this_round_partner_points;
+
+                // save
+                data.partner_move = partner_move;
+                data.my_last_move = my_last_move;
+                data.pd_points = pd_points;
+                data.pd_partner_points = pd_partner_points;        
+                data.trial_no = (trial_no = trial_no + 1);
+            }
+        };
+
+        var pd_results = {
+            type: "html-keyboard-response",
+            stimulus: function(){
+                var show_results = "<p> Du valde: " + my_last_move + "</p>" +
+                    "<p> Din medspelare valde: " + partner_move + "</p>" + 
+                    "<p> Du fick: " + this_round_points + " poäng. </p>" +
+                    "<p> Din medspelare fick: " + this_round_partner_points + " poäng. </p>";
+                var prompt_continue = "<p style='size=80%'> Tryck mellanslag för att fortsätta </p>"
+                return(show_results + prompt_continue)
+            },
+            choices: [32],
+            data:{
+                category: "pd_results",
+                pd_points: function(){
+                    var tmp = jsPsych.data.getLastTrialData().values()[0].pd_points;
+                    return(tmp)},
+                pd_partner_points: function(){
+                    var tmp = jsPsych.data.getLastTrialData().values()[0].pd_partner_points;
+                    return(tmp)},
+                my_last_move: function(){
+                    var tmp = jsPsych.data.getLastTrialData().values()[0].my_last_move;
+                    return(tmp)},
+                trial_no: function(){
+                    var tmp = jsPsych.data.getLastTrialData().values()[0].trial_no;
+                    return(tmp)}
+            }
+        };
+
+        /* push pd main */
+        var pd_procedure ={
+            timeline: [pd_choice, pd_results],
+            repetitions: 10
+        };
+        timeline.push(pd_procedure);
+
+        /* ultimatum game */ 
+        /* stuff */ 
+        var ug_points = 1000;
+        var ug_response = 0;
+        var ug_partner = 1;
+
+        var ug_instructions = {
+            type: "html-keyboard-response",
+            choices: [32],
+            stimulus: "<h2> Ultimatumspelet </h2>" +
+            "<p> Du kommer spela en runda av detta spel. Du spelar mot en annan spelare. I spelet finns två roller - Budgivare och Svarare. Du kommer spela som Budgivare. Reglerna för varje roll beskrivs nedan. </p>" +
+            "<p> <strong> Budgivare. </strong> Föreställ dig att du har fått 1000kr. Din uppgift är att fördela de mellan dig och Svararen. Du gör så genom att komma med ett bud - hur mycket mellan 0 och 1000kr du vill erbjuda Svararen. Om Svararen accepterar, får ni behålla pengar enligt den föreslagna delningen. Om Svararen avvisar budet, får varken du eller Svararen några pengar. </p>" + 
+            "<p> <strong> Svarare. </strong> Ditt jobb är att tacka ja eller nej till det bud på fördelning som Budgivaren kommer med. Om du tackar ja får ni båda pengar enligt fördelningen. Om du tackar nej får varken du eller Budgivaren några pengar. </p>",
+            prompt : "<p> Tryck på mellanslag för att börja </p>"
+        };
+        timeline.push(ug_instructions);
+
+        var ug_trial = {
+            type: "survey-html-form",
+            preamble: "<p> Skriv hur mycket (0-1000kr) du vill erbjuda Svararen. </p>" ,
+            html: '<p> Mitt bud: <input type="text" id="test-resp-box" name="ug" size="10" /></p>'  ,
+            autofocus: 'test-resp-box',
+            data: {
+                category: "ug_trial"
+            },
+            button_label: ["Fortsätt"],
+            on_finish: function(data){
+                  ug_response = parseInt(JSON.parse(data.responses).ug, 10) ;
+                  var proportion = ug_response / 1000;
+                  if (proportion > 0.299){
+                      ug_partner = "tacka ja";
+                      ug_points -= ug_response;
+                  } else {
+                      ug_partner = "tacka nej";
+                      ug_points = 0;
+                  }
+                  data.ug_partner = ug_partner;
+                  data.ug_points = ug_points;
+            }
+        };
+        timeline.push(ug_trial);
+
+        var ug_display = {
+            type: "html-keyboard-response",
+            choices: [32],
+            stimulus: function() {
+                if (ug_partner=="tacka ja"){
+                    ug_partner2 = "<span style='color:green'>" + ug_partner;
+                } else {
+                    ug_partner2 = "<span style='color:red'>" + ug_partner;
+                }
+                var show_ug_results = "<p>Svararen valde att " + ug_partner2 + "</span>.</p>" +
+                    "<p> Dina poäng: " + ug_points + "</p>"
+                var prompt_continue = "<p style='size=80%'> Tryck mellanslag för att fortsätta </p>"
+                return(show_ug_results + prompt_continue);
+            }
+        };
+        timeline.push(ug_display);
+
+        /* social summary and Qs */
+        var social_final = {
+            type: "html-button-response",
+            stimulus: function(){
+                var social_discussion = "<p> Diskutera och jämför era strategier när ni spelade fångarnas dilemma. Finns det en bästa strategi? Skulle den ändras om ni spelade spelet endast en omgång? </p>" +
+                    "<p> Fångarnas dilemma har ofta använts för att studera och förstå strategiska beslut utanför laboratoriet. Vad skulle vara exempel på sådan verkliga situationer? </p>" +
+                    "<p> Bör en Svarare acceptera alla bud i ultimatumspelet? Varför eller varför inte? </p>"
+                var dina_pts = "<div style='position:absolute; top:100px; left: 300px; right:300px'><p style='color:red; font-size:160%'> Dina poäng i fångarnas dilemma: " + pd_points + " </p> "+
+                    "<p style='color:red; font-size:160%'> Dina pengar i ultimatumspelet: " + ug_points + " </p> </div>";
+                return(dina_pts + social_discussion)
+            },
+            choices: ["Fortsätt"],
+            prompt: "Tryck \"Fortsätt\" när ni diskuterat klart och vill påbörja nästa del."
+        };
+        timeline.push(social_final);
 
         /* PROBLEM SOLVING 
             get stuff */
@@ -404,10 +631,16 @@
                 return(dina_svar + problem_discussion)
             },
             choices: ["Fortsätt"],
-            prompt: "Tryck \"Fortsätt\" när ni diskuterat klart och vill påbörja nästa del."
+            prompt: "Tryck \"Fortsätt\" när ni diskuterat klart."
         };
         timeline.push(problem_final);
-
+        
+        var final = {
+            type: "html-keyboard-response",
+            choices: [32],
+            stimulus: "<p> Du är färdig! </p>" + 
+                "<p> Vänta tills alla i klassen är klara och det är dags för den avslutande diskussionen!</p>"
+        }
 
         /* 
         ~~~
